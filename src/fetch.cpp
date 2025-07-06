@@ -5,6 +5,7 @@
 #include <memory>
 #include <sstream>
 #include <fstream>
+#include <filesystem>
 #include <stdexcept>
 
 namespace
@@ -62,17 +63,23 @@ std::string fetch(std::string const & socket_path, std::string const & url)
 
 void fetch_file(std::string const & socket_path, std::string const & url, std::string const & path)
 {
-    std::ofstream content(path);
-
     curl_ptr curl(curl_easy_init(), curl_easy_cleanup);
-    curl_easy_setopt(curl.get(), CURLOPT_WRITEFUNCTION, &fetch_file_write_callback);
-    curl_easy_setopt(curl.get(), CURLOPT_WRITEDATA, reinterpret_cast<void*>(&content));
-    curl_easy_setopt(curl.get(), CURLOPT_URL, url.c_str());
-    curl_easy_setopt(curl.get(), CURLOPT_UNIX_SOCKET_PATH, socket_path.c_str());
 
-    auto const status = curl_easy_perform(curl.get());
+    CURLcode status;
+    {
+        std::ofstream content(path);
+
+        curl_easy_setopt(curl.get(), CURLOPT_WRITEFUNCTION, &fetch_file_write_callback);
+        curl_easy_setopt(curl.get(), CURLOPT_WRITEDATA, reinterpret_cast<void*>(&content));
+        curl_easy_setopt(curl.get(), CURLOPT_URL, url.c_str());
+        curl_easy_setopt(curl.get(), CURLOPT_UNIX_SOCKET_PATH, socket_path.c_str());
+
+        status = curl_easy_perform(curl.get());
+    }
+
     if (CURLE_OK != status)
     {
+        std::filesystem::remove(path);
         throw std::runtime_error("failed to fetch");
     }
 
@@ -80,6 +87,7 @@ void fetch_file(std::string const & socket_path, std::string const & url, std::s
     curl_easy_getinfo(curl.get(), CURLINFO_RESPONSE_CODE, &http_status);
     if ((http_status < 200) || (300 <= http_status))
     {
+        std::filesystem::remove(path);
         throw std::runtime_error("failed to fetch: bad status: " + std::to_string(http_status));
     }
 }

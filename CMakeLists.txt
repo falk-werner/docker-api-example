@@ -42,15 +42,23 @@ if(NOT(WITHOUT_TEST))
 enable_testing()
 include(CTest)
 
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(LIBMICROHTTPD REQUIRED IMPORTED_TARGET libmicrohttpd)
+
 find_package(GTest REQUIRED)
 include(GoogleTest)
 
 add_executable(alltests
+    test-src/http_server.cpp
     test-src/test_url_encoding.cpp
     test-src/test_hex_char.cpp
-    test-src/test_extract.cpp)
+    test-src/test_extract.cpp
+    test-src/test_fetch.cpp)
 
-target_link_libraries(alltests PRIVATE docker-utils GTest::gtest GTest::gtest_main)
+target_link_libraries(alltests PRIVATE
+    docker-utils
+    PkgConfig::LIBMICROHTTPD
+    GTest::gtest GTest::gtest_main)
 gtest_discover_tests(alltests)
 
 endif()
