@@ -13,7 +13,9 @@ find_package(nlohmann_json REQUIRED)
 find_package(LibArchive REQUIRED)
 
 add_library(docker-utils STATIC
-    src/url_encode.cpp)
+    src/url_encode.cpp
+    src/fetch.cpp
+    src/extract.cpp)
 target_include_directories(docker-utils PUBLIC src)
 target_link_libraries(docker-utils PUBLIC 
     CURL::libcurl
@@ -45,7 +47,8 @@ include(GoogleTest)
 
 add_executable(alltests
     test-src/test_url_encoding.cpp
-    test-src/test_hex_char.cpp)
+    test-src/test_hex_char.cpp
+    test-src/test_extract.cpp)
 
 target_link_libraries(alltests PRIVATE docker-utils GTest::gtest GTest::gtest_main)
 gtest_discover_tests(alltests)
