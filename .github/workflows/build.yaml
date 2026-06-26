@@ -41,7 +41,7 @@ jobs:
       
       - name: Run Tests
         run: |
-          cmake --build --target test
+          cmake --build build --target test
 
       - name: Memcheck
         run: |
