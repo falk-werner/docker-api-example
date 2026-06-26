@@ -1,0 +1,48 @@
+name: Build
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+      
+      - name: Install DependenciesSet up Python
+        run: |
+          sudo apt install -y --no-install-recommends \
+            cmake \
+            pkg-config \
+            valgrind \
+            gcovr \
+            libgtest-dev \
+            libgmock-dev \
+            libcurl4-openssl-dev \
+            nlohmann-json3-dev \
+            libarchive-dev \
+            libmicrohttpd-dev
+      
+      - name: Configure
+        run: |
+          cmake -B build -D CMAKE_BUILD_TYPE=Debug
+      
+      - name: Build
+        run: |
+          cmake --build build
+      
+      - name: Run Tests
+        run: |
+          cmake --build --target test
+
+      - name: Memcheck
+        run: |
+          valgrind --leak-check=full --error-exitcode=1 ./build/alltests
